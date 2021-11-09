@@ -1,0 +1,14 @@
+{
+  "name": "zoom-csv-chart",
+  "version": "1.0.0",
+  "description": "",
+  "main": "csv-generator.js",
+  "scripts": {
+    "go": "node csv-generator.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "csv-writer": "^1.6.0"
+  }
+}

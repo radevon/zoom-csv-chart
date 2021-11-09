@@ -1,0 +1,103 @@
+:root{
+    --y1-color:steelblue;
+    --y2-color:red;
+  }
+
+  body{
+    margin:0; padding: 0;
+    height: 100%;
+    background-color: #f9f9f9;
+  }
+
+  #chart{
+    background-color: #fff;
+  }
+
+  #header{
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 5px;
+  }
+
+  #message{
+    color: #f53333;
+  }
+
+  #info{
+    float: right;
+  }
+
+  table.inf{
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 30px;
+  }
+
+  table.inf tr td{
+    border:1px solid gray;
+    padding: 5px;
+  }
+
+  #Freq{
+    color:var(--y2-color);
+  }
+
+  #Curr{
+    color:var(--y1-color);
+  }
+  
+  .xAxis text{
+    font-size: 15px;
+  }
+
+  .xAxis line, .y1Axis line, .y2Axis line {
+    stroke: rgb(119, 118, 118);
+    stroke-opacity: 0.8;
+    stroke-dasharray: 3 2;
+    stroke-width: 0.6;
+  }
+
+  .y1Axis text {
+    fill: var(--y1-color);
+    font-size: 15px;
+  }
+
+  .y2Axis text {
+    fill: var(--y2-color);
+    font-size: 15px;
+  }
+
+.line1{
+  fill: none;
+  stroke: var(--y1-color);
+  stroke-width: 1;
+}
+
+.line2{
+  fill: none;
+  stroke: var(--y2-color);
+  stroke-width: 1;
+}
+
+.tracer{
+  stroke: rgb(55, 138, 66);
+  opacity: 0.8;
+  stroke-dasharray: 11 8;
+}
+
+.xLabel {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.y1Label{
+  font-weight: bold;
+  fill: var(--y1-color);
+  font-size: 18px;
+}
+
+.y2Label{
+  font-weight: bold;
+  fill: var(--y2-color);
+  font-size: 18px;
+}

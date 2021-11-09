@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV-анализатор</title>
+  <link rel="stylesheet" href="style.css"/>
+
+  <script src="d3.v4.min.js"></script>
+</head>
+<body>
+
+
+<script type="text/javascript">
+ 
+</script>
+
+<div id="header">  
+        <span>Укажите файл с данными в формате .csv</span>
+        <input type="file" accept=".csv" onchange="loadFile()">
+
+        <label for="datesFilter">Выберите дату:</label>
+        <select id="datesFilter" onchange="chart()" style="display: none"></select>
+        
+        <span id="message"></span>
+
+</div>
+
+<!-- Create a div where the graph will take place -->
+<div id="chart"></div>
+
+<div id="info">
+  <table class="inf">
+    <tr>
+      <td rowspan="2">Время:</td>
+      <td rowspan="2" style="width: 400px;">
+        <span id="time"></span>
+      </td>
+      <td>Частота:</td>
+      <td style="width: 180px;">
+        <span id="Freq"></span>
+      </td>
+    </tr>
+    <tr>
+      <td>Ток:</td>
+      <td>
+        <span id="Curr"></span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+
+<script>
+
+  function DateParse(dateString,withTime=true){
+    let components=dateString.split(' ');
+    let date=components[0].split('-');
+    let time=components[1].split(':');
+    if(withTime)
+        return new Date(+date[0],+date[1]-1,+date[2],+time[0],+time[1], +time[2]);
+    else
+        return new Date(+date[0],+date[1]-1,+date[2],0,0,0);
+  }
+
+//let text='';
+let width_screen=window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+// set the dimensions and margins of the graph
+let margin = {top: 10, right: 80, bottom: 35, left: 60},
+    width = width_screen - margin.left - margin.right,
+    height = 550 - margin.top - margin.bottom;
+
+let dataG=[];
+
+
+
+
+// append the svg object to the body of the page
+let svg = d3.select("#chart")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+let x = d3.scaleTime().range([ 0, width ]);
+
+
+xAxis = svg.append("g").attr("class", "xAxis")
+    .attr("transform", "translate(0," + height + ")");
+
+y1Axis = svg.append("g").attr("class", "y1Axis");
+y2Axis = svg.append("g").attr("class", "y2Axis").attr("transform", "translate("+width+" 0)");
+
+ // Add Y axis
+ let y1 = d3.scaleLinear().range([ height, 0 ]);
+
+ let y2 = d3.scaleLinear().range([ height, 0 ]);
+
+   // Tracking bar
+let tracer = svg.append("line").attr("class","tracer").attr("y1", 0).attr("y2", height).attr("display", "none");
+
+svg.append("text").attr("class", "xLabel")
+    .attr("transform","translate(" + (width/2) + " ," + (height + margin.top + 20) + ")")
+    .style("text-anchor", "middle")
+    .text("Время");
+
+svg.append("text").attr("class", "y1Label")
+    .attr("transform","translate(" + -25 + " ," + (height / 2) + ") rotate(-90)")
+    .style("text-anchor", "middle")
+    .text("Ток");
+
+svg.append("text").attr("class", "y2Label")
+    .attr("transform","translate(" + (width+35) + " ," + (height / 2) + ") rotate(90)")
+    .style("text-anchor", "middle")
+    .text("Частота");
+
+// Add a clipPath: everything out of this area won't be drawn.
+let clip = svg.append("defs").append("svg:clipPath")
+      .attr("id", "clip")
+      .append("svg:rect")
+      .attr("width", width )
+      .attr("height", height )
+      .attr("x", 0)
+      .attr("y", 0);
+
+      // Create the line variable: where both the line and the brush take place
+let line = svg.append('g').attr("clip-path", "url(#clip)");
+
+// Add the line
+let line1 = line.append("path").attr("class", "line1").datum([]); // I add the class line to be able to modify this line later on
+// Add the line
+let line2 = line.append("path").attr("class", "line2").datum([]); // I add the class line to be able to modify this line later on
+
+let bisect = d3.bisector(function(d) { return d.date; });
+
+  // Add the brushing
+let brush_el=line.append("g").attr("class", "brush");
+
+ // A function that set idleTimeOut to null
+let idleTimeout;
+
+function idled() { idleTimeout = null; }
+
+
+// Add brushing
+let brush = d3.brushX()               // Add the brush feature using the d3.brush function
+      .extent( [ [0,0], [width,height] ] );  // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+                   // Each time the brush selection changes, trigger the 'updateChart' function
+
+
+
+function redrawChart(data){
+
+   // Add X axis --> it is a date format
+  x.domain(d3.extent(data, function(d) { return d.date; }))
+  
+  xAxis.call(d3.axisBottom(x).ticks().tickSize(-height).tickFormat(d3.timeFormat("%H:%M:%S")));
+
+  y1.domain([0, d3.max(data, function(d) { return +d.value1; })*1.1]);
+  y2.domain([0, d3.max(data, function(d) { return +d.value2; })*1.1]);
+
+  
+  y1Axis.call(d3.axisLeft(y1).ticks().tickSize(-width));  
+  y2Axis.call(d3.axisRight(y2).ticks().tickSize(-10));
+
+  
+
+ 
+  line1.datum(data)
+    .attr("d", d3.line()
+      .x(function(d) { return x(d.date) })
+      .y(function(d) { return y1(d.value1) }));
+
+  line2.datum(data)
+    .attr("d", d3.line()
+      .x(function(d) { return x(d.date) })
+      .y(function(d) { return y2(d.value2) })
+      )
+
+ 
+ svg.on("dblclick",null);
+  // If user double click, reinitialize the chart
+ svg.on("dblclick",function(){
+    x.domain(d3.extent(data, function(d) { return d.date; }))
+    xAxis.call(d3.axisBottom(x).ticks().tickSize(-height).tickFormat(d3.timeFormat("%H:%M:%S")))
+    
+    line1.transition().attr("d", d3.line()
+        .x(function(d) { return x(d.date) })
+        .y(function(d) { return y1(d.value1) })
+    )
+
+    line2.transition().attr("d", d3.line()
+        .x(function(d) { return x(d.date) })
+        .y(function(d) { return y2(d.value2) })
+    )
+  });
+
+ svg.on("mousemove",null);
+ svg.on("mousemove", function() {
+          let i = bisect.right(data, x.invert(d3.mouse(this)[0]));  // посмотреть что она делает
+                  if (i >= 1 && i < data.length) {
+                      tracer.attr("transform", "translate(" + x(data[i].date) + ",0)").attr("display", "inline");
+                      d3.select("#time").text(data[i].date.toLocaleString("ru-RU"));
+                      d3.select("#Freq").text(data[i].value2);
+                      d3.select("#Curr").text(data[i].value1);
+                  }
+                  else
+                  {
+                    tracer.attr("display", "none");
+                    d3.select("#time").text("");
+                    d3.select("#Freq").text("");
+                    d3.select("#Curr").text("");
+                  }
+              });
+
+
+
+  // A function that update the chart for given boundaries
+function updateChart() {
+    // What are the selected boundaries?
+    extent = d3.event.selection
+    // If no selection, back to initial coordinate. Otherwise, update X axis domain
+    if(!extent){
+      if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+      x.domain(d3.extent(data, function(d) { return d.date; }))
+    }else{
+      x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
+      brush_el.call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+    }
+    // Update axis and line position
+    xAxis.transition().duration(1000).call(d3.axisBottom(x).ticks().tickSize(-height).tickFormat(d3.timeFormat("%H:%M:%S")))
+    line1.transition()
+        .duration(1000)
+        .attr("d", d3.line()
+          .x(function(d) { return x(d.date) })
+          .y(function(d) { return y1(d.value1) })
+        )
+
+    line2.transition()
+        .duration(1000)
+        .attr("d", d3.line()
+          .x(function(d) { return x(d.date) })
+          .y(function(d) { return y2(d.value2) })
+        )
+  }
+  
+
+  brush.on("end", updateChart);
+
+  brush_el.call(brush);
+  
+
+ // document.querySelector("#message").innerText="";
+}
+
+
+function loadFile(){
+      document.querySelector("#datesFilter").style.display="none";
+      document.querySelector("#message").innerText="Идёт чтение файла...";
+      if(event.target.files.length==0) {  alert('Не выбран файл!');   text='';  return; }
+      
+      let f=event.target.files[0];
+      if(f.name.indexOf('.csv',)!=f.name.length-4)
+       {   alert('Выбранный тип файла не поддерживается программой!');   event.target.value = '';    text='';  return;}
+      
+       dataG=[];
+      //Read the data   "https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv"
+      let uniqDate=new Set();
+      d3.csv(f.name,function(d){
+        uniqDate.add(DateParse(d.DateTime,false).getTime());
+        return { date : DateParse(d.DateTime), value1 : +d.Current/10, value2: +d.Frequency/100 }
+      },
+      function(data){
+        dataG=data
+        let dates=Array.from(uniqDate,function (item){return new Date(item)});//Array.from(new Set(dataG.map(function(item){return new Date(item.date.getFullYear(),item.date.getMonth(),item.date.getDate()).getTime(); })),function (item){return new Date(item)});
+
+        uniqDate=null;
+        
+        let select=document.querySelector("#datesFilter");
+        select.options.length = 0;
+        for(let i=0;i<dates.length;i++)
+        {
+          let option = document.createElement('option');
+          option.innerText = dates[i].toLocaleDateString("ru-RU");
+          option.value=dates[i].getTime();
+          select.append(option);
+        }
+            
+        
+        document.querySelector("#message").innerText="";
+        select.style.display="inline";
+
+        if(dates.length>0){
+          dates=null;
+          chart();
+        }
+
+        dates=null;    
+      })      
+     
+}
+
+
+function chart(){
+  let dateSearch=document.querySelector("#datesFilter").value;
+  let data=dataG.filter(function(item){
+    return (new Date(item.date.getFullYear(),item.date.getMonth(),item.date.getDate())).getTime()==dateSearch;
+  });
+  redrawChart(data);
+  data=null;
+}
+
+
+</script>
+</body>
+</html>
+
+
+
+
+
