@@ -5,16 +5,131 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CSV-анализатор</title>
-  <link rel="stylesheet" href="style.css"/>
-
   <script src="d3.v4.min.js"></script>
+  <style>
+    :root{
+    --y1-color:steelblue;
+    --y2-color:red;
+  }
+
+  body{
+    margin:0; padding: 0;
+    height: 100%;
+    background-color: #f9f9f9;
+  }
+
+  #chart{
+    background-color: #fff;
+    width:100%;
+  }
+
+    #header{
+   width: 100%;
+   margin-bottom: 10px;
+   padding: 5px 0;
+ }
+
+ #help{
+   float:left;
+   font-size: 16px;
+   color: #677d6b;
+   max-width: 40%;
+ }
+
+ #message{
+   color: #f53333;
+ }
+
+ #info{
+   float: right;
+ }
+
+ table.inf{
+   border-collapse: collapse;
+   background: #fff;
+   font-size: 30px;
+   margin-top:1em;
+ }
+
+ table.inf tr td{
+   border:1px solid gray;
+   padding: 5px;
+ }
+
+ #Freq{
+   color:var(--y2-color);
+   font-size: 36px;
+ }
+
+ #Curr{
+   color:var(--y1-color);
+   font-size: 36px;
+ }
+
+ #time{
+   color:rgb(55, 138, 66);
+ }
+ 
+ .xAxis text{
+   font-size: 15px;
+ }
+
+ .xAxis line, .y1Axis line, .y2Axis line {
+   stroke: rgb(119, 118, 118);
+   stroke-opacity: 0.8;
+   stroke-dasharray: 3 2;
+   stroke-width: 0.6;
+ }
+
+ .y1Axis text {
+   fill: var(--y1-color);
+   font-size: 15px;
+ }
+
+ .y2Axis text {
+   fill: var(--y2-color);
+   font-size: 15px;
+ }
+
+.line1{
+ fill: none;
+ stroke: var(--y1-color);
+ stroke-width: 1;
+}
+
+.line2{
+ fill: none;
+ stroke: var(--y2-color);
+ stroke-width: 1;
+}
+
+.tracer{
+ stroke: rgb(55, 138, 66);
+ opacity: 0.8;
+ stroke-dasharray: 11 8;
+}
+
+.xLabel {
+ font-weight: bold;
+ font-size: 18px;
+}
+
+.y1Label{
+ font-weight: bold;
+ fill: var(--y1-color);
+ font-size: 18px;
+}
+
+.y2Label{
+  font-weight: bold;
+  fill: var(--y2-color);
+  font-size: 18px;
+}
+
+</style>
 </head>
 <body>
-
-
-<script type="text/javascript">
  
-</script>
 
 <div id="header">  
         <span>Укажите файл с данными в формате .csv</span>
@@ -29,6 +144,16 @@
 
 <!-- Create a div where the graph will take place -->
 <div id="chart"></div>
+
+<div id="help">
+  <ol>
+    <li>Выберите файл для анализа</li>
+    <li>Выберите дату из выпадающего списка, который будет заполнен после считывания данных</li>
+    <li>Для подробного просмотра участка графика, выделите мышью область для масштабирования</li>
+    <li>Используйте двойной клик мышкой на графике для отмены масштабирования</li>
+    <li>Курсор на графике позволяет отслеживать значения в конкретный момент времени, при этом данные отображаются в таблице</li>
+  </ol>
+</div>
 
 <div id="info">
   <table class="inf">
@@ -72,8 +197,6 @@ let margin = {top: 10, right: 80, bottom: 35, left: 60},
     height = 550 - margin.top - margin.bottom;
 
 let dataG=[];
-
-
 
 
 // append the svg object to the body of the page
@@ -267,7 +390,6 @@ function loadFile(){
        {   alert('Выбранный тип файла не поддерживается программой!');   event.target.value = '';    text='';  return;}
       
        dataG=[];
-      //Read the data   "https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv"
       let uniqDate=new Set();
       d3.csv(f.name,function(d){
         uniqDate.add(DateParse(d.DateTime,false).getTime());
@@ -275,7 +397,7 @@ function loadFile(){
       },
       function(data){
         dataG=data
-        let dates=Array.from(uniqDate,function (item){return new Date(item)});//Array.from(new Set(dataG.map(function(item){return new Date(item.date.getFullYear(),item.date.getMonth(),item.date.getDate()).getTime(); })),function (item){return new Date(item)});
+        let dates=Array.from(uniqDate,function (item){return new Date(item)});
 
         uniqDate=null;
         
