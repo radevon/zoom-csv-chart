@@ -105,3 +105,6 @@ dist
 
 # csv
 *.csv
+
+
+zoom-csv-chart-*/

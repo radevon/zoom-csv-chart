@@ -2,13 +2,20 @@
   "name": "zoom-csv-chart",
   "version": "1.0.0",
   "description": "",
-  "main": "csv-generator.js",
+  "main": "main.js",
   "scripts": {
-    "go": "node csv-generator.js"
+    "gen": "node csv-generator.js",
+    "start": "electron .",
+    "pack32":"electron-packager . zoom-csv-chart --platform=win32 --arch=ia32",
+    "pack64":"electron-packager . zoom-csv-chart --platform=win32 --arch=x64"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "csv-writer": "^1.6.0"
+  },
+  "devDependencies": {
+    "electron": "^16.0.0",
+    "electron-packager": "^15.4.0"
   }
 }
