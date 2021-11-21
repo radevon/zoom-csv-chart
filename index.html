@@ -42,6 +42,7 @@
 
  #info{
    float: right;
+   max-width: 60%;
  }
 
  table.inf{
@@ -382,16 +383,19 @@ function updateChart() {
 
 function loadFile(){
       document.querySelector("#datesFilter").style.display="none";
-      document.querySelector("#message").innerText="Идёт чтение файла...";
+      
       if(event.target.files.length==0) {  alert('Не выбран файл!');   text='';  return; }
       
       let f=event.target.files[0];
+      //console.log(f.path);
       if(f.name.indexOf('.csv',)!=f.name.length-4)
        {   alert('Выбранный тип файла не поддерживается программой!');   event.target.value = '';    text='';  return;}
       
-       dataG=[];
+      document.querySelector("#message").innerText="Идёт чтение файла...";
+      dataG=[];
       let uniqDate=new Set();
-      d3.csv(f.name,function(d){
+      // читаю файл
+      d3.csv(f.path,function(d){
         uniqDate.add(DateParse(d.DateTime,false).getTime());
         return { date : DateParse(d.DateTime), value1 : +d.Current/10, value2: +d.Frequency/100 }
       },
@@ -436,6 +440,20 @@ function chart(){
 }
 
 
+
+// for electron
+if (typeof require !== 'undefined') {
+        const currentWebContents = require('electron').remote.getCurrentWebContents();
+        document.addEventListener('keyup', ({ key, ctrlKey, shiftKey, metaKey, altKey }) => {
+            if (
+                key === 'F12' ||
+                (ctrlKey && shiftKey && key === 'I') ||
+                (metaKey && altKey && key === 'i')
+            ) {
+                currentWebContents.openDevTools();
+            }
+        });
+    }
 </script>
 </body>
 </html>

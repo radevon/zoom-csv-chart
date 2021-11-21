@@ -8,6 +8,7 @@ app.whenReady().then(() => {
         show:false
     })
 
+    //win.webContents.openDevTools();
     win.setMenuBarVisibility(false);
     win.maximize();
     // Загружаем в окне веб-содержимое
